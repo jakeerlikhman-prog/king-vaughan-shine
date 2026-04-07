@@ -8,10 +8,56 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { CalendarIcon, Check, ChevronRight, Sparkles, Droplets, Car, MessageSquare } from "lucide-react";
-import { saveBooking } from "@/lib/bookings";
+import { saveBooking, getBookings } from "@/lib/bookings";
 import { toast } from "sonner";
 
 const FORMSPREE_ENDPOINT = "https://formspree.io/f/xlgozyvq";
+
+const SERVICE_DURATION: Record<string, number> = {
+  interior: 2,
+  exterior: 1.5,
+  full: 3,
+  custom: 0,
+};
+
+function timeToMinutes(slot: string): number {
+  const [time, period] = slot.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+  if (period === "PM" && hours !== 12) hours += 12;
+  if (period === "AM" && hours === 12) hours = 0;
+  return hours * 60 + minutes;
+}
+
+function getBlockedSlots(selectedDate: Date | undefined, serviceId: string): Set<string> {
+  const blocked = new Set<string>();
+  if (!selectedDate || serviceId === "custom") return blocked;
+
+  const dateStr = format(selectedDate, "PPP");
+  const bookings = getBookings().filter((b) => b.date === dateStr);
+  const newDuration = SERVICE_DURATION[serviceId] * 60;
+
+  for (const slot of timeSlots) {
+    const slotStart = timeToMinutes(slot);
+    const slotEnd = slotStart + newDuration;
+
+    for (const booking of bookings) {
+      const existingServiceId = Object.entries(
+        { "Interior Detail": "interior", "Exterior Wash & Wax": "exterior", "Full Detail Package": "full" }
+      ).find(([label]) => label === booking.service)?.[1];
+      if (!existingServiceId) continue;
+
+      const existStart = timeToMinutes(booking.time);
+      const existEnd = existStart + SERVICE_DURATION[existingServiceId] * 60;
+
+      if (slotStart < existEnd && existStart < slotEnd) {
+        blocked.add(slot);
+        break;
+      }
+    }
+  }
+
+  return blocked;
+}
 
 const services = [
   { id: "interior", label: "Interior Detail", icon: Sparkles, price: "From $120" },
@@ -228,18 +274,26 @@ const BookingForm = () => {
                   <div className="flex-1">
                     <Label className="mb-2 block text-sm text-muted-foreground">Time Slot</Label>
                     <div className="grid grid-cols-3 gap-2">
-                      {timeSlots.map((slot) => (
-                        <button
-                          key={slot}
-                          onClick={() => setTime(slot)}
-                          className={cn(
-                            "px-3 py-2 rounded-lg border text-sm transition-all",
-                            time === slot ? "border-primary bg-primary/10 text-primary font-medium" : "border-border hover:border-primary/40 text-muted-foreground"
-                          )}
-                        >
-                          {slot}
-                        </button>
-                      ))}
+                      {timeSlots.map((slot) => {
+                        const blocked = getBlockedSlots(date, selectedService).has(slot);
+                        return (
+                          <button
+                            key={slot}
+                            onClick={() => !blocked && setTime(slot)}
+                            disabled={blocked}
+                            className={cn(
+                              "px-3 py-2 rounded-lg border text-sm transition-all",
+                              blocked
+                                ? "border-border bg-muted text-muted-foreground/40 cursor-not-allowed line-through"
+                                : time === slot
+                                  ? "border-primary bg-primary/10 text-primary font-medium"
+                                  : "border-border hover:border-primary/40 text-muted-foreground"
+                            )}
+                          >
+                            {slot}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
