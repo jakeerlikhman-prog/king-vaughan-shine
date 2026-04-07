@@ -6,7 +6,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { CalendarIcon, Check, ChevronRight, Sparkles, Droplets, Car, Paintbrush } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { CalendarIcon, Check, ChevronRight, Sparkles, Droplets, Car, MessageSquare } from "lucide-react";
 import { saveBooking } from "@/lib/bookings";
 import { toast } from "sonner";
 
@@ -14,7 +15,7 @@ const services = [
   { id: "interior", label: "Interior Detail", icon: Sparkles, price: "From $120" },
   { id: "exterior", label: "Exterior Wash & Wax", icon: Droplets, price: "From $80" },
   { id: "full", label: "Full Detail Package", icon: Car, price: "From $200" },
-  { id: "paint", label: "Paint Decontamination", icon: Paintbrush, price: "From $150" },
+  { id: "custom", label: "Custom Service", icon: MessageSquare, price: "Inquire for pricing" },
 ];
 
 const timeSlots = [
@@ -34,6 +35,7 @@ const BookingForm = () => {
   const [vehicle, setVehicle] = useState("");
   const [address, setAddress] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [customInquiry, setCustomInquiry] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   const validateStep3 = () => {
@@ -59,6 +61,7 @@ const BookingForm = () => {
       email: email.trim(),
       vehicle: vehicle.trim(),
       address: address.trim(),
+      ...(selectedService === "custom" && { customInquiry: customInquiry.trim() }),
     });
     setSubmitted(true);
     toast.success("Booking confirmed!");
@@ -83,8 +86,15 @@ const BookingForm = () => {
               <p><span className="text-muted-foreground">Phone:</span> <span className="font-medium">{phone}</span></p>
               <p><span className="text-muted-foreground">Vehicle:</span> <span className="font-medium">{vehicle}</span></p>
               <p><span className="text-muted-foreground">Address:</span> <span className="font-medium">{address}</span></p>
+              {selectedService === "custom" && customInquiry && (
+                <p><span className="text-muted-foreground">Service Details:</span> <span className="font-medium">{customInquiry}</span></p>
+              )}
             </div>
-            <p className="text-muted-foreground text-sm">We'll reach out to confirm your appointment shortly.</p>
+            <p className="text-muted-foreground text-sm">
+              {selectedService === "custom"
+                ? "We'll review your inquiry and reach out with a custom quote shortly."
+                : "We'll reach out to confirm your appointment shortly."}
+            </p>
           </div>
         </div>
       </section>
@@ -145,10 +155,24 @@ const BookingForm = () => {
                     </button>
                   ))}
                 </div>
+                {selectedService === "custom" && (
+                  <div className="pt-2">
+                    <Label htmlFor="customInquiry" className="text-sm mb-1.5 block">
+                      Describe the service you need
+                    </Label>
+                    <Textarea
+                      id="customInquiry"
+                      value={customInquiry}
+                      onChange={(e) => setCustomInquiry(e.target.value)}
+                      placeholder="Please describe what you're looking for and we'll get back to you with a custom quote..."
+                      className="bg-surface border-border min-h-[100px]"
+                    />
+                  </div>
+                )}
                 <div className="flex justify-end pt-4">
                   <Button
                     onClick={() => setStep(2)}
-                    disabled={!selectedService}
+                    disabled={!selectedService || (selectedService === "custom" && !customInquiry.trim())}
                     className="bg-gradient-gold text-primary-foreground font-semibold"
                   >
                     Next <ChevronRight className="w-4 h-4 ml-1" />
@@ -255,6 +279,9 @@ const BookingForm = () => {
                   <p><span className="text-muted-foreground">Email:</span> <span className="font-medium">{email}</span></p>
                   <p><span className="text-muted-foreground">Vehicle:</span> <span className="font-medium">{vehicle}</span></p>
                   <p><span className="text-muted-foreground">Address:</span> <span className="font-medium">{address}</span></p>
+                  {selectedService === "custom" && customInquiry && (
+                    <p><span className="text-muted-foreground">Service Details:</span> <span className="font-medium">{customInquiry}</span></p>
+                  )}
                 </div>
                 <div className="flex justify-between pt-4">
                   <Button variant="outline" onClick={() => setStep(3)}>Back</Button>

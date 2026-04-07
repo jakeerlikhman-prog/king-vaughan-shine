@@ -8,6 +8,7 @@ export interface Booking {
   email: string;
   vehicle: string;
   address: string;
+  customInquiry?: string;
   createdAt: string;
 }
 
