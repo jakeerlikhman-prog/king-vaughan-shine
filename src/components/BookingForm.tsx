@@ -11,6 +11,8 @@ import { CalendarIcon, Check, ChevronRight, Sparkles, Droplets, Car, MessageSqua
 import { saveBooking } from "@/lib/bookings";
 import { toast } from "sonner";
 
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/xlgozyvq";
+
 const services = [
   { id: "interior", label: "Interior Detail", icon: Sparkles, price: "From $120" },
   { id: "exterior", label: "Exterior Wash & Wax", icon: Droplets, price: "From $80" },
@@ -51,8 +53,8 @@ const BookingForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    saveBooking({
+  const handleSubmit = async () => {
+    const bookingData = {
       service: services.find((s) => s.id === selectedService)?.label || "",
       date: date ? format(date, "PPP") : "",
       time,
@@ -62,7 +64,23 @@ const BookingForm = () => {
       vehicle: vehicle.trim(),
       address: address.trim(),
       ...(selectedService === "custom" && { customInquiry: customInquiry.trim() }),
-    });
+    };
+
+    saveBooking(bookingData);
+
+    try {
+      await fetch(FORMSPREE_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          _subject: `New Booking: ${bookingData.service} — ${bookingData.name}`,
+          ...bookingData,
+        }),
+      });
+    } catch {
+      // Booking still saved locally even if email fails
+    }
+
     setSubmitted(true);
     toast.success("Booking confirmed!");
   };
