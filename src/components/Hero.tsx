@@ -13,7 +13,7 @@ const Hero = () => {
 
       <div className="relative z-10 container mx-auto px-4 text-center flex flex-col items-center gap-8 pt-20">
         <img
-          src="/logo.png"
+          src={`${import.meta.env.BASE_URL}logo.png`}
           alt="King Vaughan Auto Detailing Logo"
           className="h-20 md:h-28 w-auto mb-4"
         />

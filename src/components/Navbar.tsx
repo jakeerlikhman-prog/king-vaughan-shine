@@ -28,7 +28,7 @@ const Navbar = () => {
     >
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <a href="#" className="flex items-center gap-3">
-          <img src="/logo.png" alt="King Vaughan Auto Detailing Logo" className="h-10 w-auto" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="King Vaughan Auto Detailing Logo" className="h-10 w-auto" />
         </a>
 
         <div className="hidden md:flex items-center gap-8">
