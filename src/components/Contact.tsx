@@ -1,4 +1,62 @@
 import { Phone, MapPin, Clock } from "lucide-react";
+import { useForm, ValidationError } from "@formspree/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+const ContactForm = () => {
+  const [state, handleSubmit] = useForm("xlgozyvq");
+
+  if (state.succeeded) {
+    return (
+      <div className="glass-card rounded-2xl p-8 text-center max-w-xl mx-auto mt-16">
+        <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+          <span className="text-primary text-2xl">✓</span>
+        </div>
+        <h3 className="text-xl font-semibold mb-2">Message Sent!</h3>
+        <p className="text-muted-foreground text-sm">Thanks for reaching out. We'll get back to you shortly.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-8 max-w-xl mx-auto mt-16 space-y-5">
+      <h3 className="text-xl font-semibold mb-2">Send Us a Message</h3>
+
+      <div>
+        <Label htmlFor="name" className="text-sm mb-1.5 block">Full Name</Label>
+        <Input id="name" type="text" name="name" placeholder="John Doe" required className="bg-surface border-border" />
+        <ValidationError field="name" prefix="Name" errors={state.errors} className="text-destructive text-xs mt-1" />
+      </div>
+
+      <div>
+        <Label htmlFor="email" className="text-sm mb-1.5 block">Email</Label>
+        <Input id="email" type="email" name="email" placeholder="john@example.com" required className="bg-surface border-border" />
+        <ValidationError field="email" prefix="Email" errors={state.errors} className="text-destructive text-xs mt-1" />
+      </div>
+
+      <div>
+        <Label htmlFor="phone" className="text-sm mb-1.5 block">Phone <span className="text-muted-foreground font-normal">(optional)</span></Label>
+        <Input id="phone" type="tel" name="phone" placeholder="(647) 000-0000" className="bg-surface border-border" />
+      </div>
+
+      <div>
+        <Label htmlFor="message" className="text-sm mb-1.5 block">Message</Label>
+        <Textarea id="message" name="message" placeholder="Tell us about your vehicle and what you need..." required className="bg-surface border-border min-h-[120px]" />
+        <ValidationError field="message" prefix="Message" errors={state.errors} className="text-destructive text-xs mt-1" />
+      </div>
+
+      <Button
+        type="submit"
+        disabled={state.submitting}
+        className="w-full bg-gradient-gold text-primary-foreground font-semibold"
+      >
+        {state.submitting ? "Sending..." : "Send Message"}
+      </Button>
+    </form>
+  );
+};
 
 const Contact = () => {
   return (
@@ -41,6 +99,8 @@ const Contact = () => {
             </div>
           </div>
         </div>
+
+        <ContactForm />
       </div>
     </section>
   );
