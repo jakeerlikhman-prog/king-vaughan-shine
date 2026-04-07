@@ -47,6 +47,14 @@ const ContactForm = () => {
         <ValidationError field="message" prefix="Message" errors={state.errors} className="text-destructive text-xs mt-1" />
       </div>
 
+      {state.errors && state.errors.length > 0 && (
+        <div className="text-destructive text-sm bg-destructive/10 rounded-lg p-3">
+          {state.errors.map((err, i) => (
+            <p key={i}>{err.message}</p>
+          ))}
+        </div>
+      )}
+
       <Button
         type="submit"
         disabled={state.submitting}
