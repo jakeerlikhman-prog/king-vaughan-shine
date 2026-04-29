@@ -20,7 +20,7 @@ const Hero = () => {
 
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight max-w-4xl">
           Premium Mobile Detailing,{" "}
-          <span className="text-gradient-gold">Right to Your Driveway</span>
+          <span className="text-gradient-gold">At Your Driveway</span>
         </h1>
 
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
