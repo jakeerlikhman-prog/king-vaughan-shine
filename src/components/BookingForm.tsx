@@ -85,6 +85,7 @@ const BookingForm = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [customInquiry, setCustomInquiry] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateStep3 = () => {
     const newErrors: Record<string, string> = {};
@@ -100,35 +101,50 @@ const BookingForm = () => {
   };
 
   const handleSubmit = async () => {
-    const bookingData = {
-      service: services.find((s) => s.id === selectedService)?.label || "",
-      date: date ? format(date, "PPP") : "",
-      time,
-      name: name.trim(),
-      phone: phone.trim(),
-      email: email.trim(),
-      vehicle: vehicle.trim(),
-      address: address.trim(),
-      ...(selectedService === "custom" && { customInquiry: customInquiry.trim() }),
-    };
-
-    saveBooking(bookingData);
-
+    setIsSubmitting(true);
     try {
-      await fetch(FORMSPREE_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          _subject: `New Booking: ${bookingData.service} — ${bookingData.name}`,
-          ...bookingData,
-        }),
-      });
-    } catch {
-      // Booking still saved locally even if email fails
-    }
+      const bookingData = {
+        service: services.find((s) => s.id === selectedService)?.label || "",
+        date: date ? format(date, "PPP") : "",
+        time,
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        vehicle: vehicle.trim(),
+        address: address.trim(),
+        ...(selectedService === "custom" && { customInquiry: customInquiry.trim() }),
+      };
 
-    setSubmitted(true);
-    toast.success("Booking confirmed!");
+      try {
+        saveBooking(bookingData);
+      } catch {
+        // Continue even if local save fails
+      }
+
+      try {
+        const res = await fetch(FORMSPREE_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            _subject: `New Booking - ${bookingData.service} - ${bookingData.name}`,
+            ...bookingData,
+          }),
+        });
+        if (!res.ok) {
+          console.error("Formspree error:", res.status, await res.text());
+        }
+      } catch (err) {
+        console.error("Email notification failed:", err);
+      }
+
+      setSubmitted(true);
+      toast.success("Booking confirmed!");
+    } catch (err) {
+      console.error("Booking submission error:", err);
+      toast.error("Something went wrong. Please try again or call us directly.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const stepLabels = ["Service", "Date & Time", "Your Info", "Confirm"];
@@ -357,8 +373,8 @@ const BookingForm = () => {
                 </div>
                 <div className="flex justify-between pt-4">
                   <Button variant="outline" onClick={() => setStep(3)}>Back</Button>
-                  <Button onClick={handleSubmit} className="bg-gradient-gold text-primary-foreground font-bold px-8">
-                    Confirm Booking
+                  <Button onClick={handleSubmit} disabled={isSubmitting} className="bg-gradient-gold text-primary-foreground font-bold px-8">
+                    {isSubmitting ? "Confirming..." : "Confirm Booking"}
                   </Button>
                 </div>
               </div>
